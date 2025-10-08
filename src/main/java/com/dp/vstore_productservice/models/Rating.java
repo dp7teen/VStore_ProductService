@@ -10,7 +10,7 @@ import lombok.Setter;
 @Entity(name = "ratings")
 @Getter @Setter
 public class Rating extends BaseModel {
-    private Double rating;
+    private double rating;
     @ManyToOne(cascade = CascadeType.PERSIST)
     private Product product;
     private Long userId;

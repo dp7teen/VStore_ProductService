@@ -15,6 +15,9 @@ import com.dp.vstore_productservice.strategies.productSearchingStrategy.SearchBy
 import com.dp.vstore_productservice.strategies.productSearchingStrategy.SearchByProduct;
 import com.dp.vstore_productservice.strategies.productSearchingStrategy.SearchingStrategy;
 import com.dp.vstore_productservice.utils.SortingHelper;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Sort;
@@ -30,9 +33,13 @@ public class ProductServiceImpl implements ProductService {
     private List<SearchingStrategy> searchingStrategies;
 
     public ProductServiceImpl(ProductRepository productRepository,
-                              CategoryRepository categoryRepository) {
+                              CategoryRepository categoryRepository,
+                              List<ProductUpdater> productUpdaters,
+                              List<SearchingStrategy> searchingStrategies) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
+        this.productUpdaters = productUpdaters;
+        this.searchingStrategies = searchingStrategies;
     }
 
     private Optional<Product> findProductByName(String name) {
@@ -52,7 +59,7 @@ public class ProductServiceImpl implements ProductService {
         product.setCategory(new ArrayList<>());
 
         dto.getCategory().forEach(category -> {
-            Optional<Category> optionalCategory = categoryRepository.findByCategoryName(category);
+            Optional<Category> optionalCategory = categoryRepository.findByCategoryNameAndDeletedFalse(category);
             if (optionalCategory.isPresent() && !optionalCategory.get().getDeleted()) {
                 product.getCategory().add(optionalCategory.get());
             }
@@ -93,7 +100,7 @@ public class ProductServiceImpl implements ProductService {
             throw new RuntimeException("Product is already deleted.");
         }
         Product product = optionalProduct.get();
-        initiateProductUpdaters();
+
         for (ProductUpdater productUpdater : productUpdaters) {
             productUpdater.update(product, dto);
         }
@@ -102,9 +109,10 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Cacheable(value = "products", key = "#dto.getName() + '-' + #page + '-' + #size + '-' + #dto.getSortBy()")
     public Page<ProductDto> getProducts(SearchProductsDto dto, int page, int size) throws ProductNotFoundException {
         List<Sort.Order> sortedBy = SortingHelper.sortHelper(dto.getSortBy());
-        initiateSearchingStrategies();
+
         for (SearchingStrategy searchingStrategy : searchingStrategies) {
             Page<ProductDto> pages = searchingStrategy.search(dto.getName(), sortedBy, page, size);
             if (pages != null) {
@@ -115,12 +123,13 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Product getSingleProduct(Long id) throws ProductNotFoundException {
+    @Cacheable(value = "products", key = "#id")
+    public ProductDto getSingleProduct(Long id) throws ProductNotFoundException {
         Optional<Product> optionalProduct = productRepository.findByIdAndDeletedFalse(id);
         if (optionalProduct.isEmpty()) {
             throw new ProductNotFoundException(String.format("Product '%s' not found.", id));
         }
-        return optionalProduct.get();
+        return ProductDto.from(optionalProduct.get());
     }
 
     @Override
@@ -130,6 +139,9 @@ public class ProductServiceImpl implements ProductService {
             throw new ProductNotFoundException(String.format("Product '%s' not found.", id));
         }
         Product product = optionalProduct.get();
+        if (product.getStock() < quantityToDeduct) {
+            throw new RuntimeException(String.format("Product stock is less than %s to deduct", quantityToDeduct));
+        }
         product.setStock(product.getStock() - quantityToDeduct);
         productRepository.save(product);
         return true;
@@ -145,17 +157,4 @@ public class ProductServiceImpl implements ProductService {
         return Map.of("stock", product.getStock());
     }
 
-    private void initiateProductUpdaters() {
-        productUpdaters = List.of(
-                new UpdateProductName(), new UpdateProductDesc(),
-                new UpdateProductCategory(), new UpdateProductPrice(),
-                new UpdateProductStock()
-        );
-    }
-
-    private void initiateSearchingStrategies() {
-        searchingStrategies = List.of(
-                new SearchByProduct(), new SearchByCategory()
-        );
-    }
 }

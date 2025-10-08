@@ -13,9 +13,9 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Optional;
 
-@Component @NoArgsConstructor
+@Component
 public class SearchByProduct implements SearchingStrategy {
-    private ProductRepository productRepository;
+    private final ProductRepository productRepository;
 
     public SearchByProduct(ProductRepository productRepository) {
         this.productRepository = productRepository;

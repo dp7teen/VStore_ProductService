@@ -23,7 +23,7 @@ public interface ProductService {
 
     Page<ProductDto> getProducts(SearchProductsDto dto, int  page, int size) throws ProductNotFoundException;
 
-    Product getSingleProduct(Long id) throws ProductNotFoundException;
+    ProductDto getSingleProduct(Long id) throws ProductNotFoundException;
 
     Boolean updateStock(Long id, int quantityToDeduct) throws ProductNotFoundException;
 

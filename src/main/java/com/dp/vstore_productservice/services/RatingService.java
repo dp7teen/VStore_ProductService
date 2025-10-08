@@ -8,9 +8,9 @@ import org.springframework.stereotype.Service;
 
 @Service
 public interface RatingService {
-    Rating rate(Long id, Long productId, Double rating) throws ProductNotFoundException, RatingIsAddedException;
+    Rating rate(Long id, Long productId, double rating) throws ProductNotFoundException, RatingIsAddedException;
 
-    String deleteRating(Long ratingId) throws RatingNotFoundException;
+    String deleteRating(Long userId , Long ratingId) throws RatingNotFoundException;
 
-    Rating updateRating(Long id, Long productId, Double rating) throws RatingNotFoundException, ProductNotFoundException;
+    Rating updateRating(Long userId, Long ratingId, Long productId, double rating) throws RatingNotFoundException, ProductNotFoundException;
 }
