@@ -11,11 +11,11 @@ import java.util.List;
 public class Product extends BaseModel {
     private String productName;
     private String productDescription;
-    private Double productPrice;
+    private double productPrice;
     @ManyToMany(cascade = CascadeType.PERSIST)
     private List<Category> category;
-    private Integer stock;
+    private int stock;
     @OneToMany(mappedBy = "product", cascade = CascadeType.REMOVE)
     private List<Rating> ratings;
-    private Double averageRating;
+    private double averageRating;
 }

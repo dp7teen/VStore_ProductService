@@ -10,12 +10,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
-@Component @NoArgsConstructor
+@Component
 public class SearchByCategory implements SearchingStrategy {
-    private CategoryRepository categoryRepository;
+    private final CategoryRepository categoryRepository;
 
     public SearchByCategory(CategoryRepository categoryRepository) {
         this.categoryRepository = categoryRepository;
@@ -23,13 +23,15 @@ public class SearchByCategory implements SearchingStrategy {
 
     @Override
     public Page<ProductDto> search(String name, List<Sort.Order> orders, int page, int size) {
-        Optional<Category> optionalCategory = categoryRepository.findByCategoryNameAndDeletedFalse(name);
-        if (optionalCategory.isEmpty()) {
+        List<Category> categories = categoryRepository.findAllByCategoryNameContainsIgnoreCaseAndDeletedFalse(name);
+        if (categories.isEmpty()) {
             return null;
         }
-        Category category = optionalCategory.get();
-        List<ProductDto> productDtos = category.getProducts().stream().map(ProductDto::from).toList();
-
+        List<ProductDto> productDtos = new ArrayList<>();
+        for (Category category : categories) {
+            List<ProductDto> dtos = category.getProducts().stream().map(ProductDto::from).toList();
+            productDtos.addAll(dtos);
+        }
         return new PageImpl<>(productDtos, PageRequest.of(page, size), productDtos.size());
     }
 }

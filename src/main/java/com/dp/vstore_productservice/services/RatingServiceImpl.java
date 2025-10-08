@@ -10,6 +10,7 @@ import com.dp.vstore_productservice.repositories.RatingRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 
@@ -29,14 +30,14 @@ public class RatingServiceImpl implements RatingService {
     }
 
     @Override
-    public Rating rate(Long userId, Long productId, Double rating) throws ProductNotFoundException, RatingIsAddedException {
+    public Rating rate(Long userId, Long productId, double rating) throws ProductNotFoundException, RatingIsAddedException {
         Optional<Product> optionalProduct = productRepository.findByIdAndDeletedFalse(productId);
         if (optionalProduct.isEmpty()) {
             throw new ProductNotFoundException("Product not found.");
         }
         Product product = optionalProduct.get();
 
-        Optional<Rating> optionalRating = ratingRepository.findByUserIdAndDeletedFalse(userId);
+        Optional<Rating> optionalRating = ratingRepository.findByUserIdAndProduct_IdAndDeletedFalse(userId, productId);
         if (optionalRating.isPresent()) {
             throw new RatingIsAddedException("Your rating is added already. If you want you can update!");
         }
@@ -44,19 +45,23 @@ public class RatingServiceImpl implements RatingService {
         ratingEntity.setProduct(product);
         ratingEntity.setRating(rating);
         ratingEntity.setUserId(userId);
+        ratingRepository.save(ratingEntity);
 
         double avgRating = ratingRepository.getAverageRatingByProduct_Id(productId);
         product.setAverageRating(avgRating);
         productRepository.save(product);
 
-        return ratingRepository.save(ratingEntity);
+        return ratingEntity;
     }
 
     @Override
-    public String deleteRating(Long ratingId) throws RatingNotFoundException {
+    public String deleteRating(Long userId, Long ratingId) throws RatingNotFoundException {
         Optional<Rating> optionalRating = ratingRepository.findByIdAndDeletedFalse(ratingId);
         if (optionalRating.isEmpty()) {
             throw new RatingNotFoundException(String.format("Rating with id = %s is not found", ratingId));
+        }
+        if (!optionalRating.get().getUserId().equals(userId)) {
+            throw new RatingNotFoundException("You cannot delete this rating. Hence you did not rate this product!");
         }
         Rating rating = optionalRating.get();
         rating.setDeleted(true);
@@ -66,10 +71,13 @@ public class RatingServiceImpl implements RatingService {
     }
 
     @Override
-    public Rating updateRating(Long ratingId, Long productId, Double rating) throws RatingNotFoundException, ProductNotFoundException {
+    public Rating updateRating(Long userId, Long ratingId, Long productId, double rating) throws RatingNotFoundException, ProductNotFoundException {
         Optional<Rating> optionalRating = ratingRepository.findByIdAndDeletedFalse(ratingId);
         if (optionalRating.isEmpty()) {
             throw new RatingNotFoundException(String.format("Rating with id = %s is not found", ratingId));
+        }
+        if (!optionalRating.get().getUserId().equals(userId)) {
+            throw new RatingNotFoundException("You cannot update this rating. Hence you did not rate this product!");
         }
 
         Optional<Product> optionalProduct = productRepository.findByIdAndDeletedFalse(productId);
@@ -81,10 +89,12 @@ public class RatingServiceImpl implements RatingService {
         Rating ratingEntity = optionalRating.get();
         ratingEntity.setRating(rating);
         ratingEntity.setLastModifiedAt(new Date());
+        ratingRepository.save(ratingEntity);
 
         Product product = optionalProduct.get();
         product.setAverageRating(ratingRepository.getAverageRatingByProduct_Id(productId));
+        productRepository.save(product);
 
-        return ratingRepository.save(ratingEntity);
+        return ratingEntity;
     }
 }

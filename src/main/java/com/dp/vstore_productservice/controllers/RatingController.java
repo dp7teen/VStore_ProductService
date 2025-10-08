@@ -4,9 +4,15 @@ import com.dp.vstore_productservice.dtos.RatingDto;
 import com.dp.vstore_productservice.exceptions.ProductNotFoundException;
 import com.dp.vstore_productservice.exceptions.RatingIsAddedException;
 import com.dp.vstore_productservice.exceptions.RatingNotFoundException;
+import com.dp.vstore_productservice.security.UserPrincipal;
 import com.dp.vstore_productservice.services.RatingService;
+import com.dp.vstore_productservice.utils.GetUserPrincipal;
+import io.jsonwebtoken.Claims;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -18,33 +24,37 @@ public class RatingController {
         this.ratingService = ratingService;
     }
 
-    //todo: Show the aggregated average of all ratings for a product when showing a product.
+    private Long getUserIdFromContext() {
+        UserPrincipal details = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return Long.parseLong(details.id());
+    }
 
-    @PostMapping("/{id}/{productId}")
-    public ResponseEntity<RatingDto> rate(@PathVariable Long id,
-                                          @PathVariable Long productId,
-                                          @RequestParam(name = "rating") Double rating) throws ProductNotFoundException, RatingIsAddedException {
+    @PostMapping("/{productId}")
+    public ResponseEntity<RatingDto> rate(@PathVariable Long productId,
+                                          @RequestParam(name = "rating") double rating) throws ProductNotFoundException, RatingIsAddedException {
+        Long id = getUserIdFromContext();
         return new ResponseEntity<>(
                 RatingDto.from(ratingService.rate(id, productId, rating)),
                 HttpStatus.CREATED
         );
     }
 
-    @PutMapping("/{id}/{productId}")
-    public ResponseEntity<RatingDto> updateRating(@PathVariable Long id,
+    @PutMapping("/{ratingIid}/{productId}")
+    public ResponseEntity<RatingDto> updateRating(@PathVariable Long ratingIid,
                                                   @PathVariable Long productId,
-                                                  @RequestParam(name = "rating") Double rating)
+                                                  @RequestParam(name = "rating") double rating)
             throws RatingNotFoundException, ProductNotFoundException {
         return new ResponseEntity<>(
-                RatingDto.from(ratingService.updateRating(id, productId, rating)),
+                RatingDto.from(ratingService.updateRating(Long.valueOf(GetUserPrincipal.getUserPrincipal().id()),
+                        ratingIid, productId, rating)),
                 HttpStatus.CREATED
         );
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteRating(@PathVariable Long id) throws RatingNotFoundException {
+    @DeleteMapping("/{ratingIid}")
+    public ResponseEntity<String> deleteRating(@PathVariable Long ratingIid) throws RatingNotFoundException {
         return new ResponseEntity<>(
-                ratingService.deleteRating(id),
+                ratingService.deleteRating(Long.valueOf(GetUserPrincipal.getUserPrincipal().id()), ratingIid),
                 HttpStatus.OK
         );
     }

@@ -55,12 +55,12 @@ public class ProductController {
 
     @GetMapping("/{id}")
     public ProductDto getProduct(@PathVariable Long id) throws ProductNotFoundException {
-        return ProductDto.from(productService.getSingleProduct(id));
+        return productService.getSingleProduct(id);
     }
 
-    @PatchMapping("/update/{id}/{quantityToDeduct}")
+    @PutMapping("/update/{id}/{quantityToDeduct}")
     public ResponseEntity<Boolean> updateProduct(@PathVariable long id,
-                                                    @PathVariable int quantityToDeduct) throws ProductNotFoundException {
+                                                 @PathVariable int quantityToDeduct) throws ProductNotFoundException {
         return new ResponseEntity<>(productService.updateStock(id, quantityToDeduct), HttpStatus.CREATED);
     }
 
