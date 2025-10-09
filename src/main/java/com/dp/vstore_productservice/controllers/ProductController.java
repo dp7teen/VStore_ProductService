@@ -1,9 +1,6 @@
 package com.dp.vstore_productservice.controllers;
 
-import com.dp.vstore_productservice.dtos.CreateProductDto;
-import com.dp.vstore_productservice.dtos.ProductDto;
-import com.dp.vstore_productservice.dtos.SearchProductsDto;
-import com.dp.vstore_productservice.dtos.UpdateProductDto;
+import com.dp.vstore_productservice.dtos.*;
 import com.dp.vstore_productservice.exceptions.ProductAlreadyPresentException;
 import com.dp.vstore_productservice.exceptions.ProductNotFoundException;
 import com.dp.vstore_productservice.models.Product;
@@ -47,9 +44,9 @@ public class ProductController {
     }
 
     @PostMapping("/search")
-    public Page<ProductDto> searchProduct(@Valid @RequestBody SearchProductsDto dto,
-                                          @RequestParam(name = "page", defaultValue = "0", required = false) int page,
-                                          @RequestParam(name = "size", defaultValue = "5", required = false) int size) throws ProductNotFoundException {
+    public ProductPageDto searchProduct(@Valid @RequestBody SearchProductsDto dto,
+                                        @RequestParam(name = "page", defaultValue = "0", required = false) int page,
+                                        @RequestParam(name = "size", defaultValue = "5", required = false) int size) throws ProductNotFoundException {
         return productService.getProducts(dto, page, size);
     }
 
