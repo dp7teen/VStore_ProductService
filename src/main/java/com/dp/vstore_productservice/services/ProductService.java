@@ -1,9 +1,6 @@
 package com.dp.vstore_productservice.services;
 
-import com.dp.vstore_productservice.dtos.CreateProductDto;
-import com.dp.vstore_productservice.dtos.ProductDto;
-import com.dp.vstore_productservice.dtos.SearchProductsDto;
-import com.dp.vstore_productservice.dtos.UpdateProductDto;
+import com.dp.vstore_productservice.dtos.*;
 import com.dp.vstore_productservice.exceptions.ProductAlreadyPresentException;
 import com.dp.vstore_productservice.exceptions.ProductNotFoundException;
 import com.dp.vstore_productservice.models.Product;
@@ -21,7 +18,7 @@ public interface ProductService {
 
     Product updateProduct(Long id, UpdateProductDto dto) throws ProductNotFoundException;
 
-    Page<ProductDto> getProducts(SearchProductsDto dto, int  page, int size) throws ProductNotFoundException;
+    ProductPageDto getProducts(SearchProductsDto dto, int  page, int size) throws ProductNotFoundException;
 
     ProductDto getSingleProduct(Long id) throws ProductNotFoundException;
 

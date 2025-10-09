@@ -1,9 +1,6 @@
 package com.dp.vstore_productservice.services;
 
-import com.dp.vstore_productservice.dtos.CreateProductDto;
-import com.dp.vstore_productservice.dtos.ProductDto;
-import com.dp.vstore_productservice.dtos.SearchProductsDto;
-import com.dp.vstore_productservice.dtos.UpdateProductDto;
+import com.dp.vstore_productservice.dtos.*;
 import com.dp.vstore_productservice.exceptions.ProductAlreadyPresentException;
 import com.dp.vstore_productservice.exceptions.ProductNotFoundException;
 import com.dp.vstore_productservice.models.Category;
@@ -110,13 +107,13 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Cacheable(value = "products", key = "#dto.getName() + '-' + #page + '-' + #size + '-' + #dto.getSortBy()")
-    public Page<ProductDto> getProducts(SearchProductsDto dto, int page, int size) throws ProductNotFoundException {
+    public ProductPageDto getProducts(SearchProductsDto dto, int page, int size) throws ProductNotFoundException {
         List<Sort.Order> sortedBy = SortingHelper.sortHelper(dto.getSortBy());
 
         for (SearchingStrategy searchingStrategy : searchingStrategies) {
             Page<ProductDto> pages = searchingStrategy.search(dto.getName(), sortedBy, page, size);
             if (pages != null) {
-                return pages;
+                return ProductPageDto.from(pages);
             }
         }
         throw new ProductNotFoundException(String.format("Product '%s' not found.", dto.getName()));
