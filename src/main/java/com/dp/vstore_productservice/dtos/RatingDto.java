@@ -6,12 +6,14 @@ import lombok.Setter;
 
 @Getter @Setter
 public class RatingDto {
+    private Long ratingId;
     private Long userId;
     private Long productId;
     private Double rating;
 
     public static RatingDto from(Rating rating) {
         RatingDto dto = new RatingDto();
+        dto.ratingId = rating.getId();
         dto.userId = rating.getUserId();
         dto.productId = rating.getProduct().getId();
         dto.rating = rating.getRating();

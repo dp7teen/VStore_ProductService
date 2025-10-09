@@ -61,7 +61,7 @@ public class RatingServiceImpl implements RatingService {
             throw new RatingNotFoundException(String.format("Rating with id = %s is not found", ratingId));
         }
         if (!optionalRating.get().getUserId().equals(userId)) {
-            throw new RatingNotFoundException("You cannot delete this rating. Hence you did not rate this product!");
+            throw new RatingNotFoundException("You cannot delete this rating. Hence this is not your rating!");
         }
         Rating rating = optionalRating.get();
         rating.setDeleted(true);
@@ -77,7 +77,7 @@ public class RatingServiceImpl implements RatingService {
             throw new RatingNotFoundException(String.format("Rating with id = %s is not found", ratingId));
         }
         if (!optionalRating.get().getUserId().equals(userId)) {
-            throw new RatingNotFoundException("You cannot update this rating. Hence you did not rate this product!");
+            throw new RatingNotFoundException("You cannot update this rating. Hence this is not your rating!");
         }
 
         Optional<Product> optionalProduct = productRepository.findByIdAndDeletedFalse(productId);

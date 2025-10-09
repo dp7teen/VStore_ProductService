@@ -9,12 +9,15 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/products")
+@EnableMethodSecurity
 public class ProductController {
     private final ProductService productService;
 
@@ -23,12 +26,14 @@ public class ProductController {
     }
 
     @PostMapping("/add")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductDto> addProduct(@Valid @RequestBody CreateProductDto dto) throws ProductAlreadyPresentException {
         Product product = productService.addProduct(dto);
         return new ResponseEntity<>(ProductDto.from(product), HttpStatus.CREATED);
     }
 
     @DeleteMapping("/delete/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> deleteProduct(@PathVariable long id) throws ProductNotFoundException {
         return new ResponseEntity<>(
                 productService.deleteProduct(id),
@@ -37,6 +42,7 @@ public class ProductController {
     }
 
     @PatchMapping("/update/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductDto> updateProduct(@PathVariable long id,
                                                     @RequestBody UpdateProductDto dto) throws ProductNotFoundException {
         Product product = productService.updateProduct(id, dto);
